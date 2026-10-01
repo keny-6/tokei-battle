@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>とけいの もじばん 10パターン</title>
+<style>
+:root{--cream:#fdf6ec;--ink:#5b4636;--soft:#bfae9c;--cherry:#e8607a;--leaf:#7bb274;--gold:#e9b949;--paper:#fffdf7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--ink);font-family:'Hiragino Maru Gothic ProN','ヒラギノ丸ゴ ProN W4','Hiragino Sans',sans-serif;padding:20px 16px 40px}
+h1{font-size:26px;margin-bottom:6px}
+.lead{color:#8a7462;font-size:14px;margin-bottom:18px;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(470px,1fr));gap:18px}
+@media (max-width:520px){.grid{grid-template-columns:1fr}}
+.tile{background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:14px 16px 16px;box-shadow:0 5px 0 rgba(91,70,54,.18)}
+.head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.num{width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:20px;flex:0 0 auto}
+.name{font-weight:bold;font-size:20px}
+.note{font-size:13px;color:#8a7462;line-height:1.5;margin-bottom:10px}
+.row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.cell{display:flex;flex-direction:column;align-items:center;gap:4px}
+.cell span{font-size:11px;color:var(--soft);white-space:nowrap}
+.big svg{width:220px;height:220px}
+.mid svg{width:130px;height:130px}
+.sml svg{width:84px;height:84px}
+</style>
+</head>
+<body>
+<h1>とけいの もじばん 10パターン</h1>
+<p class="lead">アプリで使う3サイズで並べています。大＝問題の時計、中＝ふたりバトル、小＝「とけいで えらぶ」の選択肢。<br>時刻は 大：3じ40ぷん／中：11じ5ふん／小：7じ50ぷん（短針が「次の数字」に近い、いちばん読み間違えやすい時刻）です。</p>
+<div class="grid" id="grid"></div>
+
+<script>
+(function(){
+function pol(r,deg){var a=(deg-90)*Math.PI/180;return [ (100+r*Math.cos(a)).toFixed(2), (100+r*Math.sin(a)).toFixed(2) ];}
+function line(a,b,stroke,w,cap){return '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="'+stroke+'" stroke-width="'+w+'" stroke-linecap="'+(cap||'round')+'"/>';}
+function txt(p,s,size,fill,extra){return '<text x="'+p[0]+'" y="'+p[1]+'" font-size="'+size+'" fill="'+fill+'" text-anchor="middle" dominant-baseline="central" font-family="Hiragino Maru Gothic ProN,Hiragino Sans,sans-serif" '+(extra||'')+'>'+s+'</text>';}
+function angles(h,m){return {ha:(h%12)*30+m*0.5, ma:m*6};}
+function ticks(rIn,rOut,rInBig,colS,colB,wS,wB){var o='';for(var i=0;i<60;i++){var big=i%5===0;o+=line(pol(big?rInBig:rIn,i*6),pol(rOut,i*6),big?colB:colS,big?wB:wS);}return o;}
+function hands(h,m,o){ // o: {hl,hw,hc, ml,mw,mc, center, tail}
+  var a=angles(h,m), s='';
+  if(o.tail){ s+=line(pol(o.tail,a.ma+180),pol(o.ml,a.ma),o.mc,o.mw); s+=line(pol(o.tail,a.ha+180),pol(o.hl,a.ha),o.hc,o.hw); }
+  else { s+=line([100,100],pol(o.ml,a.ma),o.mc,o.mw,o.cap); s+=line([100,100],pol(o.hl,a.ha),o.hc,o.hw,o.cap); }
+  s+='<circle cx="100" cy="100" r="'+(o.cr||7)+'" fill="'+(o.cc||'#5b4636')+'"/><circle cx="100" cy="100" r="'+((o.cr||7)*0.4).toFixed(1)+'" fill="#fffdf7"/>';
+  return s;
+}
+function nums(r,size,fill,weight){var o='';for(var i=1;i<=12;i++)o+=txt(pol(r,i*30),i,size,fill,'font-weight="'+(weight||'bold')+'"');return o;}
+function minNums(r,size,fill,zero){var o='';for(var i=1;i<=12;i++){var n=i*5%60;o+=txt(pol(r,i*30),(n===0?zero:n),size,fill,'font-weight="bold"');}return o;}
+
+var FACES=[
+ {name:'きほん（いまの もじばん）', note:'バージョン3で使っているもの。分の数字は内側、短針が赤・長針が緑。',
+  draw:function(h,m){return '<circle cx="100" cy="100" r="95" fill="#fffdf7" stroke="#5b4636" stroke-width="4"/>'
+   +ticks(89,95,86,'#bfae9c','#5b4636',1.4,3)+minNums(77,11,'#d09a74',0)+nums(60,23,'#5b4636')
+   +hands(h,m,{hl:42,hw:11,hc:'#e8607a',ml:72,mw:7,mc:'#5c9e63'});}},
+
+ {name:'きょうかしょ', note:'小1の教科書に近い形。時の数字が主役で大きく、分の数字は外周に小さく。短針が赤・長針が青で、教科書の「みじかいはり・ながいはり」の説明と同じ配色。',
+  draw:function(h,m){return '<circle cx="100" cy="100" r="86" fill="#ffffff" stroke="#333" stroke-width="3"/>'
+   +ticks(80,86,77,'#999','#333',1.5,3.5)+minNums(93,10,'#7a6a5a',60)+nums(62,25,'#222')
+   +hands(h,m,{hl:44,hw:9,hc:'#d7263d',ml:74,mw:5,mc:'#1e63b5',cr:6,cc:'#222'});}},
+
+ {name:'ゾーン', note:'12の扇形を交互に塗り分け。短針が「どの数字とどの数字の間か」が一目で分かる。「3じ40ぷん」を「4じ40ぷん」と読む間違いを防ぐ狙い。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="96" fill="#fffdf7" stroke="#5b4636" stroke-width="4"/>';
+   for(var i=0;i<12;i++){var a1=i*30,a2=a1+30,p1=pol(96,a1),p2=pol(96,a2);
+     s+='<path d="M100,100 L'+p1[0]+','+p1[1]+' A96,96 0 0,1 '+p2[0]+','+p2[1]+' Z" fill="'+(i%2?'#fff3d6':'#fde4e9')+'" stroke="#fff" stroke-width="1.5"/>';}
+   s+='<circle cx="100" cy="100" r="96" fill="none" stroke="#5b4636" stroke-width="4"/>';
+   s+=ticks(90,96,87,'#c9b8a6','#5b4636',1.4,3)+nums(62,24,'#5b4636')
+   +hands(h,m,{hl:40,hw:11,hc:'#e8607a',ml:78,mw:6,mc:'#5c9e63'});return s;}},
+
+ {name:'ミニマル', note:'数字は 12・3・6・9 だけ、あとは点。ごちゃつかないぶん針が目立つ。数字を全部読めるようになった後の「慣れ」向け。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="96" fill="#ffffff" stroke="#3a3a3a" stroke-width="3"/>';
+   for(var i=0;i<60;i++){if(i%15===0)continue;var p=pol(88,i*6);s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i%5?1.3:3)+'" fill="'+(i%5?'#c8c8c8':'#3a3a3a')+'"/>';}
+   [12,3,6,9].forEach(function(n){s+=txt(pol(76,n*30),n,30,'#3a3a3a');});
+   s+=hands(h,m,{hl:46,hw:10,hc:'#3a3a3a',ml:80,mw:5,mc:'#d7263d',cr:6,cc:'#3a3a3a'});return s;}},
+
+ {name:'ポップ', note:'数字を丸いプレートに入れて、針は先が太い矢印型。太い輪郭で、小さく表示してもはっきりする。子ども向けおもちゃの時計の雰囲気。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="96" fill="#fff7e6" stroke="#5b4636" stroke-width="6"/>';
+   for(var i=0;i<60;i++){if(i%5===0)continue;s+=line(pol(88,i*6),pol(93,i*6),'#d9c7b0',2);}
+   for(var i=1;i<=12;i++){var p=pol(72,i*30);s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="13" fill="'+(i%3===0?'#e9b949':'#fde4e9')+'" stroke="#5b4636" stroke-width="2.5"/>'+txt(p,i,16,'#5b4636');}
+   var a=angles(h,m),mp=pol(56,a.ma),hp=pol(36,a.ha),mt=pol(70,a.ma),ht=pol(50,a.ha);
+   s+=line([100,100],mp,'#5c9e63',7)+'<polygon points="'+pol(84,a.ma).join(',')+' '+pol(60,a.ma-9).join(',')+' '+pol(60,a.ma+9).join(',')+'" fill="#5c9e63" stroke="#fffdf7" stroke-width="1.5"/>';
+   s+=line([100,100],hp,'#e8607a',10)+'<polygon points="'+pol(56,a.ha).join(',')+' '+pol(34,a.ha-14).join(',')+' '+pol(34,a.ha+14).join(',')+'" fill="#e8607a" stroke="#fffdf7" stroke-width="1.5"/>';
+   s+='<circle cx="100" cy="100" r="8" fill="#5b4636"/><circle cx="100" cy="100" r="3.5" fill="#fffdf7"/>';return s;}},
+
+ {name:'2しょくリング', note:'外のリング＝分（緑）、内のリング＝時（赤）。針の色とリングの色を合わせているので「緑の針は緑の数字を読む」「赤の針は赤の数字を読む」と説明できる。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="97" fill="#eef5ec" stroke="#5b4636" stroke-width="3"/>'
+   +'<circle cx="100" cy="100" r="72" fill="#fdecef" stroke="#5b4636" stroke-width="2"/>'
+   +'<circle cx="100" cy="100" r="50" fill="#fffdf7" stroke="#5b4636" stroke-width="1.5"/>';
+   for(var i=0;i<60;i++){s+=line(pol(93,i*6),pol(97,i*6),i%5?'#9cc39a':'#3f7a45',i%5?1.2:2.5);}
+   s+=minNums(84,10,'#3f7a45',0)+nums(61,17,'#b23c54')
+   +hands(h,m,{hl:40,hw:9,hc:'#e8607a',ml:80,mw:6,mc:'#5c9e63'});return s;}},
+
+ {name:'レトロ', note:'生成りの地に細めの黒い針、少しクラシックな数字。家の時計に近い見た目で、ゲーム外の実物の時計に移行しやすい。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="96" fill="#f7efe0" stroke="#4a3b2f" stroke-width="5"/><circle cx="100" cy="100" r="90" fill="none" stroke="#c9b58f" stroke-width="1"/>';
+   s+=ticks(84,89,81,'#8a7462','#4a3b2f',1.2,2.5);
+   for(var i=1;i<=12;i++)s+=txt(pol(68,i*30),i,22,'#4a3b2f','font-family="Georgia,\'Times New Roman\',serif" font-weight="bold"');
+   s+=hands(h,m,{hl:46,hw:6,hc:'#4a3b2f',ml:76,mw:4,mc:'#4a3b2f',cr:5,cc:'#4a3b2f',tail:12});
+   var a=angles(h,m);s+='<circle cx="'+pol(46,a.ha)[0]+'" cy="'+pol(46,a.ha)[1]+'" r="5" fill="#b23c54"/>';return s;}},
+
+ {name:'5ふんブロック', note:'外周を「5分ごとのブロック」に区切って色を交互に。長針がいくつ目のブロックを指しているかを数えれば分が分かる。「5・10・15…」と数える練習に向く。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="97" fill="#fffdf7" stroke="#5b4636" stroke-width="3"/>';
+   for(var i=0;i<12;i++){var a1=i*30,a2=a1+30,o1=pol(97,a1),o2=pol(97,a2),i1=pol(80,a2),i2=pol(80,a1);
+     s+='<path d="M'+o1[0]+','+o1[1]+' A97,97 0 0,1 '+o2[0]+','+o2[1]+' L'+i1[0]+','+i1[1]+' A80,80 0 0,0 '+i2[0]+','+i2[1]+' Z" fill="'+(i%2?'#b9dcb4':'#7bb274')+'" stroke="#fffdf7" stroke-width="2"/>';
+     s+=txt(pol(88.5,a1+15),(i+1)*5,10,'#1f4d27','font-weight="bold"');}
+   s+='<circle cx="100" cy="100" r="80" fill="none" stroke="#5b4636" stroke-width="2"/>';
+   for(var i=0;i<60;i++){if(i%5)s+=line(pol(80,i*6),pol(84,i*6),'#fffdf7',1.2);}
+   s+=nums(62,22,'#5b4636')+hands(h,m,{hl:40,hw:10,hc:'#e8607a',ml:88,mw:6,mc:'#2f6b38'});return s;}},
+
+ {name:'ふとはり', note:'針をとにかく太く、長さの差も大きく。小さく表示しても「どっちが短針か」を迷わない。文字盤の数字も大きめ。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="96" fill="#ffffff" stroke="#5b4636" stroke-width="5"/>';
+   s+=ticks(86,92,83,'#d0c2b2','#5b4636',2,4)+nums(64,26,'#5b4636');
+   var a=angles(h,m);
+   s+=line([100,100],pol(74,a.ma),'#fffdf7',14)+line([100,100],pol(74,a.ma),'#5c9e63',9);
+   s+=line([100,100],pol(40,a.ha),'#fffdf7',20)+line([100,100],pol(40,a.ha),'#e8607a',15);
+   s+='<circle cx="100" cy="100" r="9" fill="#5b4636"/><circle cx="100" cy="100" r="4" fill="#fffdf7"/>';return s;}},
+
+ {name:'ふんスケール', note:'分の数字を主役に大きく外周へ、時の数字は小さめ内側。長針の先端に小さな丸、短針の先に三角をつけて、針の先が何を指しているかを追いやすくした。',
+  draw:function(h,m){var s='<circle cx="100" cy="100" r="97" fill="#fffdf7" stroke="#5b4636" stroke-width="4"/><circle cx="100" cy="100" r="70" fill="none" stroke="#e5d8c6" stroke-width="1.5"/>';
+   s+=ticks(74,80,72,'#c9b8a6','#5b4636',1.4,3)+minNums(88,12,'#3f7a45',0)+nums(56,17,'#5b4636');
+   var a=angles(h,m),mp=pol(80,a.ma),hp=pol(46,a.ha);
+   s+=line([100,100],mp,'#5c9e63',6)+'<circle cx="'+mp[0]+'" cy="'+mp[1]+'" r="6" fill="#5c9e63" stroke="#fffdf7" stroke-width="2"/>';
+   s+=line([100,100],pol(34,a.ha),'#e8607a',10)+'<polygon points="'+pol(50,a.ha).join(',')+' '+pol(32,a.ha-12).join(',')+' '+pol(32,a.ha+12).join(',')+'" fill="#e8607a"/>';
+   s+='<circle cx="100" cy="100" r="7" fill="#5b4636"/><circle cx="100" cy="100" r="3" fill="#fffdf7"/>';return s;}}
+];
+
+function svg(f,h,m){return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">'+f.draw(h,m)+'</svg>';}
+var g=document.getElementById('grid'),html='';
+FACES.forEach(function(f,i){
+  html+='<div class="tile"><div class="head"><div class="num">'+(i+1)+'</div><div class="name">'+f.name+'</div></div>'
+   +'<div class="note">'+f.note+'</div><div class="row">'
+   +'<div class="cell big">'+svg(f,3,40)+'<span>大　3じ40ぷん</span></div>'
+   +'<div class="cell mid">'+svg(f,11,5)+'<span>中　11じ5ふん</span></div>'
+   +'<div class="cell sml">'+svg(f,7,50)+'<span>小　7じ50ぷん</span></div>'
+   +'</div></div>';
+});
+g.innerHTML=html;
+window.__faces=FACES;
+})();
+</script>
+</body>
+</html>
